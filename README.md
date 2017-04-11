@@ -1,5 +1,5 @@
 # move-docker-image - Copy docker images without a full docker installation
-[![Build Status](https://travis-ci.org/alecthomas/kingpin.svg?branch=master)](https://travis-ci.org/alecthomas/kingpin) 
+[![Build Status](https://travis-ci.org/mdlavin/copy-docker-image.svg?branch=master)](https://travis-ci.org/mdlavin/copy-docker-image)
 
 ## Overview
 
