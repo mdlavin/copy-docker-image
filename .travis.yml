@@ -1,9 +1,26 @@
 language: go
 go:
-  - 1.6
-  - 1.7
-  - 1.8
+- 1.8
+before_install:
+- go get -u github.com/kardianos/govendor
+- go get github.com/mitchellh/gox
 install:
-  - go get -u github.com/kardianos/govendor
-  - govendor sync
-  - go build main.go
+- govendor sync
+script: go build main.go
+after_success:
+- gox -output "dist/{{.Dir}}_{{.OS}}_{{.Arch}}"
+deploy:
+  provider: releases
+  api_key:
+    secure: KsGWr0SutbYTNTaTO9nnYZUpO6Pki+oh1MsOGIquhJUBvDtT0VxHvRTIttA3Ziv/xJf6BKiSLBI885gC4/zavohqgk0WqtAQyiNtfmv/5o2fenRbgqjz75ak+pvOw2CyCKeRuo7R32FK1S0HKk4dTQua79toZjRyZcY3gTX2vzEHrEdRQSp8WQyHCfHE60de+sDGQZxQ0bcnfrMy4cSfSJ7hlpTywwJpBhURib1nY1q6RSotOrJBhmhTpBTEgn1AiIF51cYdtxmJJA4MrO6JEpyiciQvLrUquS/3w8k0+NmMYik0G12ECM3p6e/l9Qzb0tkMjPYvDWBMTHw4r/lObiJFV9V/Mc6iaP0PKyjKHEdx49ywMN0xspfEhm1H6R6YsxSEBGrdBvU7vhCDQh7TBZZJ7SqcW1jkNfpRY7wgTg4WCUzMJB8TD6rWEl+/LLb70uVjOKJaz0kXkDYc+RRG8+C2r3NPabfQ/pDBZoZvP87E2vyQ9M5Fo7vm8CIXDUF6VBHX8t4drCY5pTEN7UE3gH15An1S5njN+Kd4VMqeHfySO0ARceSZXiQcsgyZ3k/cVfX3rqDxXcAJYyli7IMX9QuPaGbtkDFejZqIWlrLs2EsQui/4r3RhQNVpUHtQjMlxQfa46TI9oScAnoMfDjY4S82nuIm328lKmAcRRNNQVw=
+  file:
+  - dist/copy-docker-image_darwin_amd64
+  - dist/copy-docker-image_darwin_386
+  - dist/copy-docker-image_linux_amd64
+  - dist/copy-docker-image_linux_386
+  - dist/copy-docker-image_windows_amd64.exe
+  - dist/copy-docker-image_windows_386.exe
+  on:
+    repo: mdlavin/copy-docker-image
+    tags: true
+  skip_cleanup: true
