@@ -25,3 +25,6 @@ Because copy to AWS ECR was common a special URL format was added to automatical
 $ copy-docker-image --srcRepo http://registry1/ --destRepo ecr:<account-id> --repo project
 ```
  
+## Installation
+
+Pre-built binaries for tagged releases are available on the [releases page](https://github.com/mdlavin/copy-docker-image/releases).
