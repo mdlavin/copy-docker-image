@@ -525,5 +525,5 @@
 			"revisionTime": "2017-04-05T16:58:12Z"
 		}
 	],
-	"rootPath": "move-docker-image"
+	"rootPath": "copy-docker-image"
 }
