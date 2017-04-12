@@ -1,4 +1,7 @@
 language: go
+sudo: required
+services:
+- docker
 go:
 - 1.8
 before_install:
@@ -6,9 +9,16 @@ before_install:
 - go get github.com/mitchellh/gox
 install:
 - govendor sync
-script: go build main.go
+script:
+- go build main.go
 after_success:
+# Build most binaries with GOX
 - gox -output "dist/{{.Dir}}_{{.OS}}_{{.Arch}}"
+# Rename the Linux binary so that it's clearly based on gnu/glibc
+- mv dist/copy-docker-image_linux_amd64 dist/copy-docker-image_linux_amd64_gnu
+# Build a Musl based binary for Apline Linux based users
+- docker run --rm -v $GOPATH:/go -w /go/src/github.com/mdlavin/copy-docker-image quay.io/arschles/go-alpine-musl:latest
+- mv copy-docker-image dist/copy-docker-image_linux_amd64_musl
 deploy:
   provider: releases
   api_key:
@@ -16,7 +26,8 @@ deploy:
   file:
   - dist/copy-docker-image_darwin_amd64
   - dist/copy-docker-image_darwin_386
-  - dist/copy-docker-image_linux_amd64
+  - dist/copy-docker-image_linux_amd64_gnu
+  - dist/copy-docker-image_linux_amd64_musl
   - dist/copy-docker-image_linux_386
   - dist/copy-docker-image_windows_amd64.exe
   - dist/copy-docker-image_windows_386.exe
