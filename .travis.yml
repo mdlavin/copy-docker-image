@@ -7,6 +7,7 @@ go:
 before_install:
 - go get -u github.com/kardianos/govendor
 - go get github.com/mitchellh/gox
+- export GO_VERSION=$(go version | cut -d' ' -f3 | grep -Eo '\d+\.\d+\.\d+')
 install:
 - govendor sync
 script:
@@ -17,7 +18,7 @@ after_success:
 # Rename the Linux binary so that it's clearly based on gnu/glibc
 - mv dist/copy-docker-image_linux_amd64 dist/copy-docker-image_linux_amd64_gnu
 # Build a Musl based binary for Apline Linux based users
-- docker run --rm -v $GOPATH:/go -w /go/src/github.com/mdlavin/copy-docker-image quay.io/mdlavin/go-alpine-musl:$(go version | cut -d' ' -f3 | grep -Eo '\d+\.\d+\.\d+')
+- docker run --rm -v $GOPATH:/go -w /go/src/github.com/mdlavin/copy-docker-image quay.io/mdlavin/go-alpine-musl:$GO_VERSION
 - mv copy-docker-image dist/copy-docker-image_linux_amd64_musl
 deploy:
   provider: releases
