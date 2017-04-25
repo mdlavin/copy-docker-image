@@ -231,7 +231,7 @@ func main() {
 		}
 	}
 
-	err = destHub.PutManifest("sample-tracker", "latest", manifest)
+	err = destHub.PutManifest(*destArgs.Repository, *destArgs.Tag, manifest)
 	if err != nil {
 		fmt.Printf("Failed to upload manifest to %s/%s:%s. %v", destHub.URL, *destArgs.Repository, *destArgs.Tag, err)
 		exitCode = -1
