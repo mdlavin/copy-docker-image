@@ -15,18 +15,15 @@ limitations under the License.
 package main
 
 import (
-	"encoding/base64"
 	"fmt"
-	"github.com/alecthomas/kingpin"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/ecr"
-	"github.com/docker/distribution/manifest/schema1"
-	"github.com/heroku/docker-registry-client/registry"
 	"io"
 	"io/ioutil"
 	"os"
-	"strings"
+
+	"github.com/alecthomas/kingpin"
+	"github.com/docker/distribution/manifest/schema1"
+	"github.com/fsouza/go-dockerclient"
+	"github.com/heroku/docker-registry-client/registry"
 )
 
 func moveLayerUsingFile(srcHub *registry.Registry, destHub *registry.Registry, srcRepo string, destRepo string, layer schema1.FSLayer, file *os.File) error {
@@ -81,10 +78,11 @@ func migrateLayer(srcHub *registry.Registry, destHub *registry.Registry, srcRepo
 		}
 
 		return err
-	} else {
-		fmt.Println("Layer already exists in the destination")
-		return nil
 	}
+
+	fmt.Println("Layer already exists in the destination")
+	return nil
+
 }
 
 type RepositoryArguments struct {
@@ -113,51 +111,26 @@ func buildRegistryArguments(argPrefix string, argDescription string) RepositoryA
 	}
 }
 
-func connectToRegistry(args RepositoryArguments) (*registry.Registry, error) {
-	origUrl := *args.RegistryURL
-	url := origUrl
+func connectToRegistry(args RepositoryArguments, auths map[string]docker.AuthConfiguration) (*registry.Registry, error) {
+
+	url := *args.RegistryURL
+
 	username := ""
 	password := ""
 
-	if strings.HasPrefix(url, "ecr:") {
-		registryId := strings.TrimPrefix(url, "ecr:")
-
-		sess, err := session.NewSession()
-		if err != nil {
-			return nil, fmt.Errorf("Failed to create new AWS SDK session. %v", err)
-		}
-		svc := ecr.New(sess)
-		params := &ecr.GetAuthorizationTokenInput{
-			RegistryIds: []*string{
-				aws.String(registryId), // Required
-			},
-		}
-
-		resp, err := svc.GetAuthorizationToken(params)
-		if err != nil {
-			return nil, fmt.Errorf("Failed to get ECR authorization token for registry %s. %v", registryId, err)
-		}
-
-		decoded, err := base64.StdEncoding.DecodeString(*resp.AuthorizationData[0].AuthorizationToken)
-		if err != nil {
-			return nil, fmt.Errorf("Failed to decode base64 encoded authorization data for ECR registry %s. %v", registryId, err)
-		}
-
-		parts := strings.Split(string(decoded), ":")
-
-		url = *resp.AuthorizationData[0].ProxyEndpoint
-		username = parts[0]
-		password = parts[1]
+	if auth, ok := auths[url]; ok {
+		username = auth.Username
+		password = auth.Password
 	}
 
-	registry, err := registry.New(url, username, password)
+	registry, err := registry.NewInsecure(url, username, password)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to create registry connection for %s. %v", origUrl, err)
+		return nil, fmt.Errorf("Failed to create registry connection for %s. %v", url, err)
 	}
 
 	err = registry.Ping()
 	if err != nil {
-		return nil, fmt.Errorf("Failed to to ping registry %s as a connection test. %v", origUrl, err)
+		return nil, fmt.Errorf("Failed to to ping registry %s as a connection test. %v", url, err)
 	}
 
 	return registry, nil
@@ -168,6 +141,11 @@ func main() {
 	defer func() {
 		os.Exit(exitCode)
 	}()
+
+	auths, err := docker.NewAuthConfigurationsFromDockerCfg()
+	if err != nil {
+		fmt.Printf("Couldn't read config.json in .docker folder\n")
+	}
 
 	srcArgs := buildRegistryArguments("src", "source")
 	destArgs := buildRegistryArguments("dest", "destiation")
@@ -190,25 +168,25 @@ func main() {
 	}
 
 	if *srcArgs.Repository == "" {
-		fmt.Printf("A source repository name is required either with --srcRepo or --repo")
+		fmt.Printf("A source repository name is required either with --srcRepo or --repo\n")
 		exitCode = -1
 		return
 	}
 
 	if *destArgs.Repository == "" {
-		fmt.Printf("A destiation repository name is required either with --destRepo or --repo")
+		fmt.Printf("A destiation repository name is required either with --destRepo or --repo\n")
 		exitCode = -1
 		return
 	}
 
-	srcHub, err := connectToRegistry(srcArgs)
+	srcHub, err := connectToRegistry(srcArgs, auths.Configs)
 	if err != nil {
 		fmt.Printf("Failed to establish a connection to the source registry. %v", err)
 		exitCode = -1
 		return
 	}
 
-	destHub, err := connectToRegistry(destArgs)
+	destHub, err := connectToRegistry(destArgs, auths.Configs)
 	if err != nil {
 		fmt.Printf("Failed to establish a connection to the destination registry. %v", err)
 		exitCode = -1
