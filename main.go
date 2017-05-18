@@ -19,6 +19,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"strings"
 
 	"github.com/alecthomas/kingpin"
 	"github.com/docker/distribution/manifest/schema1"
@@ -114,11 +115,12 @@ func buildRegistryArguments(argPrefix string, argDescription string) RepositoryA
 func connectToRegistry(args RepositoryArguments, auths map[string]docker.AuthConfiguration) (*registry.Registry, error) {
 
 	url := *args.RegistryURL
+	urlWithoutPrefix := strings.TrimPrefix(url, "https://")
 
 	username := ""
 	password := ""
 
-	if auth, ok := auths[url]; ok {
+	if auth, ok := auths[urlWithoutPrefix]; ok {
 		username = auth.Username
 		password = auth.Password
 	}
