@@ -116,6 +116,7 @@ func connectToRegistry(args RepositoryArguments, auths map[string]docker.AuthCon
 
 	url := *args.RegistryURL
 	urlWithoutPrefix := strings.TrimPrefix(url, "https://")
+	urlWithoutPrefix = strings.TrimPrefix(url, "http://")
 
 	username := ""
 	password := ""
