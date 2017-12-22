@@ -25,6 +25,7 @@ import (
 	"github.com/heroku/docker-registry-client/registry"
 	"io"
 	"io/ioutil"
+        net_url "net/url"
 	"os"
 	"strings"
 )
@@ -148,6 +149,21 @@ func connectToRegistry(args RepositoryArguments) (*registry.Registry, error) {
 		url = *resp.AuthorizationData[0].ProxyEndpoint
 		username = parts[0]
 		password = parts[1]
+	}
+	if username == "" && password == "" {
+		parsed_url, err := net_url.Parse(origUrl)
+		if err != nil {
+			return nil, fmt.Errorf("Could not parse %s. %v", origUrl, err)
+		}
+		if parsed_url.User != nil {
+			username = parsed_url.User.Username() 
+			is_set := false
+			password, is_set = parsed_url.User.Password() 
+			if !is_set {
+				password = ""
+			}
+		}
+		fmt.Printf("Got username password %s:%s", username, password)
 	}
 
 	registry, err := registry.New(url, username, password)
