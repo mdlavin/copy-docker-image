@@ -519,11 +519,11 @@
 			"revisionTime": "2016-12-29T22:47:41Z"
 		},
 		{
-			"checksumSHA1": "4K9ZcSGRZ8EPpsPhGUpgUJb+5sw=",
+			"checksumSHA1": "9auzaryOEbMgqOhhorHj2Z7EcK8=",
 			"path": "golang.org/x/sys/unix",
 			"revision": "f3918c30c5c2cb527c0b071a27c35120a6c0719a",
 			"revisionTime": "2017-04-05T16:58:12Z"
 		}
 	],
-	"rootPath": "copy-docker-image"
+	"rootPath": "github.com/moshez/copy-docker-image"
 }
