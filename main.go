@@ -27,6 +27,7 @@ import (
 	"io/ioutil"
 	"os"
 	"strings"
+	"regexp"
 )
 
 func moveLayerUsingFile(srcHub *registry.Registry, destHub *registry.Registry, srcRepo string, destRepo string, layer schema1.FSLayer, file *os.File) error {
@@ -119,10 +120,15 @@ func connectToRegistry(args RepositoryArguments) (*registry.Registry, error) {
 	username := ""
 	password := ""
 
-	if strings.HasPrefix(url, "ecr:") {
-		registryId := strings.TrimPrefix(url, "ecr:")
+	r, _ := regexp.Compile(`(?P<account_id>[0-9]{12})\.dkr\.ecr\.(?P<region>[\w\d-]+)\.amazonaws\.com`)
+	r2 := r.FindAllStringSubmatch(url, -1)
 
-		sess, err := session.NewSession()
+	if r2 != nil {
+		registryId := r2[0][1]
+		region := r2[0][2]
+
+		sess, err := session.NewSession(&aws.Config{Region: aws.String(region)})
+
 		if err != nil {
 			return nil, fmt.Errorf("Failed to create new AWS SDK session. %v", err)
 		}
