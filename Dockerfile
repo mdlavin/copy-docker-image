@@ -4,7 +4,7 @@ RUN apk update \
  && apk add git curl \
  && apk add ca-certificates
 
-RUN adduser -D -g '' user
+RUN adduser --uid 10000 -D -g '' user
 
 COPY . $GOPATH/src/github.com/tomaszkiewicz/docker-copy-docker-image
 WORKDIR $GOPATH/src/github.com/tomaszkiewicz/docker-copy-docker-image
