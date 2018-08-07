@@ -237,7 +237,13 @@ func main() {
 		}
 	}
 
-	err = destHub.PutManifest(*destArgs.Repository, *destArgs.Tag, manifest)
+	destManifest := &schema1.SignedManifest{
+		Manifest: manifest.Manifest,
+	}
+
+	destManifest.Manifest.Name = *destArgs.Repository
+
+	err = destHub.PutManifest(*destArgs.Repository, *destArgs.Tag, destManifest)
 	if err != nil {
 		fmt.Printf("Failed to upload manifest to %s/%s:%s. %v", destHub.URL, *destArgs.Repository, *destArgs.Tag, err)
 		exitCode = -1
