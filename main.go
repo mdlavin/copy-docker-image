@@ -46,7 +46,7 @@ func moveLayerUsingFile(srcHub *registry.Registry, destHub *registry.Registry, s
 
 	imageReadStream, err := os.Open(file.Name())
 	if err != nil {
-		return fmt.Errorf("Failed to open the temporary image layer for uploading. %v", err)
+		return fmt.Errorf("Failed to open temporary image layer for uploading. %v", err)
 	}
 	err = destHub.UploadLayer(destRepo, layerDigest, imageReadStream)
 	imageReadStream.Close()
@@ -58,19 +58,19 @@ func moveLayerUsingFile(srcHub *registry.Registry, destHub *registry.Registry, s
 }
 
 func migrateLayer(srcHub *registry.Registry, destHub *registry.Registry, srcRepo string, destRepo string, layer schema1.FSLayer) error {
-	fmt.Println("Checking if manifest layer exists in destiation registery")
+	fmt.Println("Checking if manifest layer exists in destination registery")
 
 	layerDigest := layer.BlobSum
 	hasLayer, err := destHub.HasLayer(destRepo, layerDigest)
 	if err != nil {
-		return fmt.Errorf("Failure while checking if the destiation registry contained an image layer. %v", err)
+		return fmt.Errorf("Failure while checking if the destination registry contained an image layer. %v", err)
 	}
 
 	if !hasLayer {
-		fmt.Println("Need to upload layer", layerDigest, "to the destiation")
+		fmt.Println("Need to upload layer", layerDigest, "to the destination")
 		tempFile, err := ioutil.TempFile("", "docker-image")
 		if err != nil {
-			return fmt.Errorf("Failure while a creating temporary file for an image layer download. %v", err)
+			return fmt.Errorf("Failure while creating temporary file for an image layer download. %v", err)
 		}
 
 		err = moveLayerUsingFile(srcHub, destHub, srcRepo, destRepo, layer, tempFile)
@@ -94,15 +94,15 @@ type RepositoryArguments struct {
 }
 
 func buildRegistryArguments(argPrefix string, argDescription string) RepositoryArguments {
-	registryURLName := fmt.Sprintf("%sURL", argPrefix)
+	registryURLName := fmt.Sprintf("%s-url", argPrefix)
 	registryURLDescription := fmt.Sprintf("URL of %s registry", argDescription)
 	registryURLArg := kingpin.Flag(registryURLName, registryURLDescription).String()
 
-	repositoryName := fmt.Sprintf("%sRepo", argPrefix)
+	repositoryName := fmt.Sprintf("%s-repo", argPrefix)
 	repositoryDescription := fmt.Sprintf("Name of the %s repository", argDescription)
 	repositoryArg := kingpin.Flag(repositoryName, repositoryDescription).String()
 
-	tagName := fmt.Sprintf("%sTag", argPrefix)
+	tagName := fmt.Sprintf("%s-tag", argPrefix)
 	tagDescription := fmt.Sprintf("Name of the %s tag", argDescription)
 	tagArg := kingpin.Flag(tagName, tagDescription).String()
 
@@ -157,7 +157,7 @@ func connectToRegistry(args RepositoryArguments) (*registry.Registry, error) {
 
 	err = registry.Ping()
 	if err != nil {
-		return nil, fmt.Errorf("Failed to to ping registry %s as a connection test. %v", origUrl, err)
+		return nil, fmt.Errorf("Failed to ping registry %s as a connection test. %v", origUrl, err)
 	}
 
 	return registry, nil
@@ -170,9 +170,9 @@ func main() {
 	}()
 
 	srcArgs := buildRegistryArguments("src", "source")
-	destArgs := buildRegistryArguments("dest", "destiation")
-	repoArg := kingpin.Flag("repo", "The repository in the source and the destiation. Values provided by --srcRepo or --destTag will override this value").String()
-	tagArg := kingpin.Flag("tag", "The tag name in the source and the destiation. Values provided by --srcTag or --destTag will override this value").Default("latest").String()
+	destArgs := buildRegistryArguments("dest", "destination")
+	repoArg := kingpin.Flag("repo", "The repository in the source and the destination. Values provided by --src-repo or --dest-tag will override this value").String()
+	tagArg := kingpin.Flag("tag", "The tag name in the source and the destination. Values provided by --src-tag or --dest-tag will override this value").Default("latest").String()
 	kingpin.Parse()
 
 	if *srcArgs.Repository == "" {
@@ -190,13 +190,13 @@ func main() {
 	}
 
 	if *srcArgs.Repository == "" {
-		fmt.Printf("A source repository name is required either with --srcRepo or --repo")
+		fmt.Printf("A source repository name is required either with --src-repo or --repo")
 		exitCode = -1
 		return
 	}
 
 	if *destArgs.Repository == "" {
-		fmt.Printf("A destiation repository name is required either with --destRepo or --repo")
+		fmt.Printf("A destination repository name is required either with --dest-repo or --repo")
 		exitCode = -1
 		return
 	}
