@@ -1,4 +1,4 @@
-# move-docker-image - Copy docker images without a full docker installation
+# copy-docker-image - Copy docker images without a full docker installation
 [![Build Status](https://travis-ci.org/mdlavin/copy-docker-image.svg?branch=master)](https://travis-ci.org/mdlavin/copy-docker-image)
 
 ## Overview
